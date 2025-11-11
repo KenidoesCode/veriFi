@@ -1,48 +1,51 @@
+// pages/verify.tsx
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { verifyProof } from "../lib/anchor";
-import VeriFiAbi from "../abi/VeriFi.json";
-
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!;
 
 export default function Verify() {
-  const [status, setStatus] = useState("Awaiting proof...");
   const [proof, setProof] = useState("");
+  const [status, setStatus] = useState("Awaiting verification...");
 
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search).get("proof");
-    if (p) {
-      setProof(p);
-      handleVerify(p);
-    }
-  }, []);
-
-  async function handleVerify(p: string) {
+  const handleVerify = async () => {
+    if (!proof.trim()) return alert("Enter a proof hash first.");
     setStatus("🔍 Verifying on blockchain...");
+
     try {
-      const res = await verifyProof(CONTRACT_ADDRESS, VeriFiAbi, p);
-      if (res.timestamp === 0) setStatus("❌ Not anchored / fake proof");
-      else
-        setStatus(
-          `✅ Authentic\n\nAuthor: ${res.author}\nTimestamp: ${new Date(
-            res.timestamp * 1000
-          ).toLocaleString()}`
-        );
+      const res = await verifyProof(proof);
+      if (!res || res.timestamp === 0) {
+        setStatus("❌ Not anchored / invalid proof");
+      } else {
+        setStatus(`✅ Verified! Timestamp: ${new Date(res.timestamp * 1000).toLocaleString()}`);
+      }
     } catch (err: any) {
-      setStatus(`Error: ${err.message}`);
+      console.error(err);
+      setStatus("⚠️ Failed to verify: " + err.message);
     }
-  }
+  };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-matrixBlack text-matrixGreen relative overflow-hidden">
-      <div className="absolute inset-0 opacity-10 bg-[url('/bg-matrix.gif')] bg-cover bg-center" />
-      <section className="z-10 text-center p-6 rounded-2xl border border-matrixGreen shadow-[0_0_20px_#00FF88] backdrop-blur-sm">
-        <h1 className="text-3xl font-bold mb-4 animate-pulse">
-          Verify Proof
-        </h1>
-        <p className="text-xs break-words mb-4">{proof}</p>
-        <pre className="text-xs whitespace-pre-line">{status}</pre>
-      </section>
+    <main className="min-h-screen flex flex-col justify-center items-center bg-slate-900 text-white px-4">
+      <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+        Verify Document
+      </h1>
+
+      <input
+        type="text"
+        value={proof}
+        onChange={(e) => setProof(e.target.value)}
+        placeholder="Enter proof hash..."
+        className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-lg p-3 mb-4 focus:border-emerald-500 outline-none text-center"
+      />
+
+      <button
+        onClick={handleVerify}
+        className="bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-lg transition-all"
+      >
+        Verify Proof
+      </button>
+
+      <p className="mt-6 text-slate-300 text-center">{status}</p>
     </main>
   );
 }

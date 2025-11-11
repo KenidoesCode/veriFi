@@ -1,71 +1,76 @@
+// pages/index.tsx
 "use client";
 import { useState } from "react";
-import MatrixRain from "../components/MatrixRain";
 import { sha512Hex, anchorOnChain } from "../lib/anchor";
 
 export default function Home() {
-  const [status, setStatus] = useState("Awaiting input...");
+  const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState("Upload and anchor your document...");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (selected: File) => {
+    setFile(selected);
+    setStatus("📄 File selected, preparing hash...");
+  };
+
+  const handleAnchor = async () => {
+    if (!file) return alert("Please choose a file first.");
+    setIsLoading(true);
+    setStatus("⚙️ Hashing file...");
+
     try {
-      setIsLoading(true);
-      setStatus("Hashing document...");
       const buffer = await file.arrayBuffer();
-      const hash = await sha512Hex(new Uint8Array(buffer));
+      const hashHex = await sha512Hex(new Uint8Array(buffer));
 
-      setStatus("Anchoring on blockchain...");
-      const result = await anchorOnChain(hash);
+      setStatus("🌐 Anchoring document on blockchain...");
+      const result = await anchorOnChain(hashHex);
 
-      if (result.success) {
-        setStatus(`✅ Anchored successfully! Txn: ${result.txnHash}`);
+      if (result && result.txnHash) {
+        setStatus(`✅ Anchored successfully! Tx: ${result.txnHash.substring(0, 16)}...`);
       } else {
-        setStatus("❌ Failed to anchor document.");
+        throw new Error("Unexpected backend response");
       }
     } catch (err: any) {
       console.error(err);
-      setStatus(`❌ ${err.message || "Failed to fetch"}`);
+      setStatus("❌ Failed: " + err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="relative min-h-screen bg-black text-green-400 font-mono overflow-hidden flex flex-col items-center justify-center">
-      <MatrixRain />
+    <main className="min-h-screen flex flex-col justify-center items-center bg-slate-900 text-white">
+      <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-8">
+        VeriFi
+      </h1>
+      <p className="text-slate-300 mb-8">{status}</p>
 
-      <div className="relative z-10 text-center border border-green-500/40 p-10 rounded-xl bg-black/70 shadow-[0_0_25px_rgba(0,255,0,0.3)] hover:shadow-[0_0_40px_rgba(0,255,0,0.5)] transition-all backdrop-blur-sm">
-        <h1 className="text-3xl mb-6 font-bold">Verify documents securely on the blockchain</h1>
-
-        <p className="text-md mb-8 text-green-300">{status}</p>
-
-        <div className="flex justify-center items-center gap-4 mb-6">
-          {/* Choose File */}
-          <label className="common-btn">
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        <label className="cursor-pointer">
+          <input
+            type="file"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+          />
+          <span className="bg-slate-800 px-6 py-3 rounded-lg border border-slate-600 hover:border-emerald-400 hover:bg-slate-700 transition-all">
             Choose File
-            <input
-              type="file"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFileUpload(file);
-              }}
-            />
-          </label>
+          </span>
+        </label>
 
-          {/* Anchor Button */}
-          <button
-            disabled={isLoading}
-            className="common-btn disabled:opacity-50"
-          >
-            Anchor on Blockchain
-          </button>
-        </div>
-
-        <p className="text-sm mt-8 text-green-600">
-          Secured by Polygon • Powered by <span className="text-green-400 font-semibold">VeriFi</span>
-        </p>
+        <button
+          onClick={handleAnchor}
+          disabled={isLoading}
+          className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            isLoading
+              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+              : "bg-emerald-600 hover:bg-emerald-700"
+          }`}
+        >
+          {isLoading ? "Processing..." : "Anchor on Blockchain"}
+        </button>
       </div>
+
+      <p className="mt-10 text-slate-500 text-sm">Secured by Polygon • Powered by VeriFi</p>
     </main>
   );
 }
