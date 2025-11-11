@@ -7,30 +7,29 @@ import { fileURLToPath } from "url";
 
 dotenv.config();
 
-// 🧩 Fix JSON import for Render (Node 22 compatible)
+// ==================== JSON Import Fix (for Node 22) ====================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const VeriFiABI = await import(path.join(__dirname, "../abi/VeriFi.json"), {
   with: { type: "json" },
 }).then((m) => m.default);
 
+// ==================== Express & CORS Setup ====================
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ Allow specific origins (local + Netlify + Render)
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "https://verifi-ai.netlify.app", // your Netlify frontend
-  "https://verifi-frontendd.onrender.com", // optional
+  "https://verifi-ai.netlify.app",
+  "https://verifi-frontendd.onrender.com",
 ];
 
-// ✅ CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        console.log(`✅ CORS allowed for: ${origin || "Server-to-server"}`);
+        console.log(`✅ CORS allowed for: ${origin || "Server"}`);
         callback(null, true);
       } else {
         console.warn(`❌ Blocked by CORS: ${origin}`);
@@ -42,7 +41,7 @@ app.use(
 
 app.use(express.json());
 
-// ==================== 🔗 Blockchain Setup ==================== //
+// ==================== Blockchain Setup ====================
 const RPC_URL = process.env.RPC_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
@@ -54,24 +53,21 @@ if (!RPC_URL || !PRIVATE_KEY || !CONTRACT_ADDRESS) {
 
 console.log("✅ Connecting to blockchain...");
 
-const provider = new ethers.JsonRpcProvider(RPC_URL);
+// ✅ FIX for Ethers v6 — Proper Provider Initialization
+const provider = new ethers.JsonRpcProvider
+  ? new ethers.JsonRpcProvider(RPC_URL)
+  : new ethers.providers.JsonRpcProvider(RPC_URL); // fallback (dual support)
+
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, VeriFiABI.abi, wallet);
 
-console.log(
-  `✅ Connected to ${await provider.getNetwork().then(n => n.name)} (chainId: ${
-    (await provider.getNetwork()).chainId
-  })`
-);
-console.log(`✅ Contract ready at ${CONTRACT_ADDRESS}`);
+// ==================== Routes ====================
 
-// ==================== 🪶 API Endpoints ==================== //
-
-// 🧱 Anchor Document Proof
+// 🪶 Anchor Document
 app.get("/anchor", async (req, res) => {
   try {
     const proof = req.query.proof;
-    if (!proof) return res.status(400).json({ error: "Proof missing" });
+    if (!proof) return res.status(400).json({ error: "Missing proof" });
 
     console.log("📥 Anchoring proof:", proof);
     const tx = await contract.anchorDocument(proof);
@@ -85,11 +81,11 @@ app.get("/anchor", async (req, res) => {
   }
 });
 
-// 🔍 Verify Document Proof
+// 🔍 Verify Document
 app.get("/verify", async (req, res) => {
   try {
     const proof = req.query.proof;
-    if (!proof) return res.status(400).json({ error: "Proof missing" });
+    if (!proof) return res.status(400).json({ error: "Missing proof" });
 
     console.log("🔍 Verifying proof:", proof);
     const result = await contract.getDocument(proof);
@@ -109,7 +105,7 @@ app.get("/verify", async (req, res) => {
   }
 });
 
-// ==================== 🚀 Start Server ==================== //
+// ==================== Start Server ====================
 app.listen(PORT, () => {
   console.log(`✅ VeriFi backend running on port ${PORT}`);
   console.log(`🌐 CORS enabled for: ${allowedOrigins.join(", ")}`);
