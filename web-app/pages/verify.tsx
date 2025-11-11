@@ -1,4 +1,3 @@
-// pages/verify.tsx
 "use client";
 import { useState } from "react";
 import { verifyProof } from "../lib/anchor";
@@ -25,8 +24,8 @@ export default function Verify() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col justify-center items-center bg-slate-900 text-white px-4">
-      <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+    <div className="matrix-bg min-h-screen flex flex-col items-center justify-center text-green-400 font-mono relative">
+      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center drop-shadow-[0_0_5px_#00ff88]">
         Verify Document
       </h1>
 
@@ -35,17 +34,21 @@ export default function Verify() {
         value={proof}
         onChange={(e) => setProof(e.target.value)}
         placeholder="Enter proof hash..."
-        className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-lg p-3 mb-4 focus:border-emerald-500 outline-none text-center"
+        className="w-full max-w-md bg-black/50 border border-green-400 rounded-lg p-3 mb-4 text-center text-green-400 placeholder-green-700 outline-none focus:shadow-[0_0_8px_#00ff88]"
       />
 
       <button
         onClick={handleVerify}
-        className="bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-lg transition-all"
+        className="px-6 py-2 border border-green-400 bg-black/40 rounded hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88] transition-all"
       >
         Verify Proof
       </button>
 
-      <p className="mt-6 text-slate-300 text-center">{status}</p>
-    </main>
+      <p className="mt-6 text-green-400 text-center z-10">{status}</p>
+
+      <p className="mt-8 text-sm text-green-500 text-center z-10">
+        Secured by Polygon • Powered by VeriFi
+      </p>
+    </div>
   );
 }

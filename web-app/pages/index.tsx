@@ -1,58 +1,56 @@
-// pages/index.tsx
 "use client";
 import { useState } from "react";
 import { sha512Hex, anchorOnChain } from "../lib/anchor";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState("Upload and anchor your document...");
+  const [status, setStatus] = useState("Awaiting input...");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileUpload = async (selected: File) => {
     setFile(selected);
-    setStatus("📄 File selected, preparing hash...");
+    setStatus("📂 File selected. Ready to anchor.");
   };
 
   const handleAnchor = async () => {
     if (!file) return alert("Please choose a file first.");
     setIsLoading(true);
-    setStatus("⚙️ Hashing file...");
+    setStatus("🌐 Anchoring document on blockchain...");
 
     try {
       const buffer = await file.arrayBuffer();
       const hashHex = await sha512Hex(new Uint8Array(buffer));
-
-      setStatus("🌐 Anchoring document on blockchain...");
       const result = await anchorOnChain(hashHex);
 
       if (result && result.txnHash) {
-        setStatus(`✅ Anchored successfully! Tx: ${result.txnHash.substring(0, 16)}...`);
+        setStatus(`✅ Anchored successfully! Txn: ${result.txnHash.slice(0, 10)}...`);
       } else {
-        throw new Error("Unexpected backend response");
+        setStatus("⚠️ Backend responded, but no txn hash found.");
       }
     } catch (err: any) {
       console.error(err);
-      setStatus("❌ Failed: " + err.message);
+      setStatus(`❌ Failed to anchor: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex flex-col justify-center items-center bg-slate-900 text-white">
-      <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-8">
-        VeriFi
+    <div className="matrix-bg min-h-screen flex flex-col items-center justify-center text-green-400 font-mono relative">
+      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center drop-shadow-[0_0_5px_#00ff88]">
+        Verify documents securely on the blockchain
       </h1>
-      <p className="text-slate-300 mb-8">{status}</p>
 
-      <div className="flex flex-col md:flex-row items-center gap-4">
+      <p className="mb-6 text-center text-lg">{status}</p>
+
+      <div className="flex flex-col sm:flex-row items-center gap-3 z-10">
         <label className="cursor-pointer">
           <input
             type="file"
             className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
           />
-          <span className="bg-slate-800 px-6 py-3 rounded-lg border border-slate-600 hover:border-emerald-400 hover:bg-slate-700 transition-all">
+          <span className="border border-green-400 bg-black/40 px-5 py-2 rounded hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88] transition-all">
             Choose File
           </span>
         </label>
@@ -60,17 +58,19 @@ export default function Home() {
         <button
           onClick={handleAnchor}
           disabled={isLoading}
-          className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+          className={`px-5 py-2 rounded border border-green-400 bg-black/40 transition-all ${
             isLoading
-              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-              : "bg-emerald-600 hover:bg-emerald-700"
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88]"
           }`}
         >
           {isLoading ? "Processing..." : "Anchor on Blockchain"}
         </button>
       </div>
 
-      <p className="mt-10 text-slate-500 text-sm">Secured by Polygon • Powered by VeriFi</p>
-    </main>
+      <p className="mt-8 text-sm text-green-500 text-center z-10">
+        Secured by Polygon • Powered by VeriFi
+      </p>
+    </div>
   );
 }

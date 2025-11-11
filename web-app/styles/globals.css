@@ -2,48 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  height: 100%;
+body {
   margin: 0;
-  padding: 0;
-  background: linear-gradient(180deg, #000000 0%, #020617 50%, #0f172a 100%);
-  color: #00ff99;
+  background: #000;
+  color: #00ff88;
   font-family: "Courier New", monospace;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
-::selection {
-  background: rgba(0, 255, 136, 0.3);
-  color: #fff;
+/* Matrix animated rain effect */
+.matrix-bg {
+  background: radial-gradient(circle at center, #010101 0%, #000000 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-button, label {
-  cursor: pointer;
+.matrix-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 255, 0, 0.08) 0px,
+    rgba(0, 255, 0, 0.08) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  animation: matrixRain 20s linear infinite;
+  opacity: 0.3;
+  z-index: 0;
 }
 
-code {
-  background: rgba(0, 0, 0, 0.6);
+@keyframes matrixRain {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+button,
+label span {
+  font-weight: 600;
   color: #00ff88;
   border-radius: 6px;
-  padding: 3px 6px;
+  transition: all 0.3s ease-in-out;
 }
 
-.common-btn {
-  border: 1px solid rgba(0, 255, 0, 0.5);
-  color: #39ff14;
-  background-color: rgba(0, 0, 0, 0.8);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: monospace;
+button:hover,
+label span:hover {
+  background-color: rgba(0, 255, 0, 0.1);
+  box-shadow: 0 0 10px #00ff88;
 }
 
-.common-btn:hover {
-  background-color: rgba(0, 255, 0, 0.2);
-  box-shadow: 0 0 25px rgba(0, 255, 0, 0.6);
+input {
+  color: #00ff88;
 }
