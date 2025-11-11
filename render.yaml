@@ -28,8 +28,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # 👇 Replace "verifi-backend" in this URL with your actual backend Render name after it deploys
       - key: NEXT_PUBLIC_BACKEND_URL
-        fromService:
-          name: verifi-backend
-          type: web
-          property: url
+        value: https://verifi-backend.onrender.com
