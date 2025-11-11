@@ -2,9 +2,17 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
-import VeriFiABI from "../abi/VeriFi.json" assert { type: "json" };
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
+// 🧩 Fix JSON import for Render (Node 22 compatible)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const VeriFiABI = await import(path.join(__dirname, "../abi/VeriFi.json"), {
+  with: { type: "json" },
+}).then((m) => m.default);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
