@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import { sha512Hex, anchorOnChain } from "../lib/anchor";
+import MatrixRain from "../components/MatrixRain";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState("Awaiting input...");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAnchoring, setIsAnchoring] = useState(false);
 
   const handleFileUpload = async (selected: File) => {
     setFile(selected);
@@ -14,7 +15,7 @@ export default function Home() {
 
   const handleAnchor = async () => {
     if (!file) return alert("Please choose a file first.");
-    setIsLoading(true);
+    setIsAnchoring(true);
     setStatus("🌐 Anchoring document on blockchain...");
 
     try {
@@ -31,46 +32,49 @@ export default function Home() {
       console.error(err);
       setStatus(`❌ Failed to anchor: ${err.message}`);
     } finally {
-      setIsLoading(false);
+      setIsAnchoring(false);
     }
   };
 
   return (
-    <div className="matrix-bg min-h-screen flex flex-col items-center justify-center text-green-400 font-mono relative">
-      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center drop-shadow-[0_0_5px_#00ff88]">
-        Verify documents securely on the blockchain
-      </h1>
+    <div className="relative min-h-screen flex flex-col items-center justify-center text-green-400 font-mono">
+      <MatrixRain isAnchoring={isAnchoring} />
+      <div className="z-10 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold mb-6 drop-shadow-[0_0_5px_#00ff88]">
+          Verify documents securely on the blockchain
+        </h1>
 
-      <p className="mb-6 text-center text-lg">{status}</p>
+        <p className="mb-6 text-lg">{status}</p>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3 z-10">
-        <label className="cursor-pointer">
-          <input
-            type="file"
-            className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-          />
-          <span className="border border-green-400 bg-black/40 px-5 py-2 rounded hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88] transition-all">
-            Choose File
-          </span>
-        </label>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+            />
+            <span className="border border-green-400 bg-black/40 px-5 py-2 rounded hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88] transition-all">
+              Choose File
+            </span>
+          </label>
 
-        <button
-          onClick={handleAnchor}
-          disabled={isLoading}
-          className={`px-5 py-2 rounded border border-green-400 bg-black/40 transition-all ${
-            isLoading
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88]"
-          }`}
-        >
-          {isLoading ? "Processing..." : "Anchor on Blockchain"}
-        </button>
+          <button
+            onClick={handleAnchor}
+            disabled={isAnchoring}
+            className={`px-5 py-2 rounded border border-green-400 bg-black/40 transition-all ${
+              isAnchoring
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-green-900 hover:shadow-[0_0_8px_#00ff88]"
+            }`}
+          >
+            {isAnchoring ? "Processing..." : "Anchor on Blockchain"}
+          </button>
+        </div>
+
+        <p className="mt-8 text-sm text-green-500 text-center">
+          Secured by Polygon • Powered by VeriFi
+        </p>
       </div>
-
-      <p className="mt-8 text-sm text-green-500 text-center z-10">
-        Secured by Polygon • Powered by VeriFi
-      </p>
     </div>
   );
 }

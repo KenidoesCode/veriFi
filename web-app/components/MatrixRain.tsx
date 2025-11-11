@@ -23,17 +23,22 @@ export default function MatrixRain({ isAnchoring }: { isAnchoring?: boolean }) {
     const drops = Array(columns).fill(1);
 
     const draw = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      // Background fade (trails)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#00ff88";
+
+      // Matrix letters
+      ctx.fillStyle = isAnchoring ? "#00ffaa" : "#00ff66";
       ctx.font = `${fontSize}px monospace`;
 
       for (let i = 0; i < drops.length; i++) {
         const text = letters[Math.floor(Math.random() * letters.length)];
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
           drops[i] = 0;
-        drops[i] += 0.25; // 👈 slower, elegant speed
+
+        drops[i] += isAnchoring ? 0.35 : 0.25; // Speed up slightly while anchoring
       }
 
       requestAnimationFrame(draw);
@@ -47,7 +52,10 @@ export default function MatrixRain({ isAnchoring }: { isAnchoring?: boolean }) {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 z-0 bg-black"
-      style={{ filter: "brightness(0.9)" }}
+      style={{
+        filter: "brightness(0.9) contrast(1.2)",
+        transition: "all 0.5s ease-in-out",
+      }}
     />
   );
 }
