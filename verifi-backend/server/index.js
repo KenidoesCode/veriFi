@@ -2,100 +2,107 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
-import fs from "fs";
-import path from "path";
+import VeriFiABI from "../abi/VeriFi.json" assert { type: "json" };
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+const PORT = process.env.PORT || 4000;
 
-// ✅ FIXED: Proper CORS setup for both localhost and Render deployments
+// ✅ Allow specific origins (local + Netlify + Render)
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://verifi-ai.netlify.app", // your Netlify frontend
+  "https://verifi-frontendd.onrender.com", // optional
+];
+
+// ✅ CORS middleware
 app.use(
   cors({
-    origin: [
-      "http://127.0.0.1:3000", // for Next.js (Turbopack)
-      "http://localhost:3000", // standard Next dev
-      "https://verifi-frontend.onrender.com", // example Render/Vercel domain
-      "https://verifi.vercel.app",
-    ],
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        console.log(`✅ CORS allowed for: ${origin || "Server-to-server"}`);
+        callback(null, true);
+      } else {
+        console.warn(`❌ Blocked by CORS: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
   })
 );
 
-const PORT = process.env.PORT || 4000;
-const RPC_URL = process.env.RPC_URL;
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+app.use(express.json());
 
-// Validate env variables
-if (!RPC_URL || !CONTRACT_ADDRESS || !PRIVATE_KEY) {
+// ==================== 🔗 Blockchain Setup ==================== //
+const RPC_URL = process.env.RPC_URL;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+
+if (!RPC_URL || !PRIVATE_KEY || !CONTRACT_ADDRESS) {
   console.error("❌ Missing environment variables in .env file!");
   process.exit(1);
 }
 
-// ✅ Load ABI dynamically
-const ABI_PATH = path.resolve("./abi/VeriFi.json");
-const ABI = JSON.parse(fs.readFileSync(ABI_PATH, "utf8")).abi;
+console.log("✅ Connecting to blockchain...");
 
-// ✅ Initialize provider, wallet, and contract
-const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, VeriFiABI.abi, wallet);
 
-// ✅ Health check route
-app.get("/", (req, res) => {
-  res.send("✅ VeriFi backend online. Connected to Polygon Amoy.");
-});
+console.log(
+  `✅ Connected to ${await provider.getNetwork().then(n => n.name)} (chainId: ${
+    (await provider.getNetwork()).chainId
+  })`
+);
+console.log(`✅ Contract ready at ${CONTRACT_ADDRESS}`);
 
-// ✅ Anchor route
+// ==================== 🪶 API Endpoints ==================== //
+
+// 🧱 Anchor Document Proof
 app.get("/anchor", async (req, res) => {
   try {
     const proof = req.query.proof;
-    if (!proof) return res.status(400).json({ error: "Proof missing in query" });
+    if (!proof) return res.status(400).json({ error: "Proof missing" });
 
-    console.log(`📥 Anchoring proof: ${proof}`);
-    const tx = await contract.anchor(proof);
+    console.log("📥 Anchoring proof:", proof);
+    const tx = await contract.anchorDocument(proof);
     await tx.wait();
 
-    res.json({
-      success: true,
-      txnHash: tx.hash,
-      proof,
-      message: "Anchored successfully on Polygon",
-    });
+    console.log(`✅ Anchored successfully | TX: ${tx.hash}`);
+    res.json({ message: "Anchored successfully", txHash: tx.hash });
   } catch (err) {
-    console.error("❌ Anchor Error:", err);
+    console.error("❌ Anchor failed:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ Verify route
+// 🔍 Verify Document Proof
 app.get("/verify", async (req, res) => {
   try {
     const proof = req.query.proof;
-    if (!proof) return res.status(400).json({ error: "Proof missing in query" });
+    if (!proof) return res.status(400).json({ error: "Proof missing" });
 
-    console.log(`🔍 Verifying proof: ${proof}`);
-    const [author, timestamp] = await contract.getAnchor(proof);
-    const verified = author !== ethers.constants.AddressZero;
+    console.log("🔍 Verifying proof:", proof);
+    const result = await contract.getDocument(proof);
 
-    res.json({
-      verified,
-      author,
-      timestamp: Number(timestamp),
+    const response = {
+      verified: result.timestamp > 0,
+      author: result.author,
+      timestamp: Number(result.timestamp),
       proof,
-    });
+    };
+
+    console.log("✅ Verification result:", response);
+    res.json(response);
   } catch (err) {
-    console.error("❌ Verify Error:", err);
+    console.error("❌ Verify failed:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ Start backend server
+// ==================== 🚀 Start Server ==================== //
 app.listen(PORT, () => {
   console.log(`✅ VeriFi backend running on port ${PORT}`);
-  console.log(`🌐 CORS enabled for frontend at http://127.0.0.1:3000`);
+  console.log(`🌐 CORS enabled for: ${allowedOrigins.join(", ")}`);
 });
