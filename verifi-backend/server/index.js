@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ Fix for __dirname in ES Modules
+// ✅ Fix for ES Modules (__dirname workaround)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -25,6 +25,7 @@ const allowedOrigins = [
   "http://127.0.0.1:3000",
   "https://verifi-ai.netlify.app",
   "https://verifi-frontendd.onrender.com",
+  "https://verifi-9z6m.onrender.com",
 ];
 
 app.use(
@@ -51,8 +52,9 @@ if (!RPC_URL || !PRIVATE_KEY || !CONTRACT_ADDRESS) {
 
 console.log("✅ Connecting to blockchain...");
 
-// ✅ Correct Ethers v6 provider and wallet
-const provider = new ethers.JsonRpcProvider(RPC_URL);
+// ✅ FIX for Ethers v6
+// Ethers v6 uses `ethers.providers.JsonRpcProvider`, not `ethers.JsonRpcProvider`
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, VeriFiABI.abi, wallet);
 
