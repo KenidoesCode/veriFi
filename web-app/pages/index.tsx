@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { sha512Hex, anchorOnChain } from "../lib/anchor";
 import MatrixRain from "../components/MatrixRain";
+import BootIntro from "../components/BootIntro";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState("Awaiting input...");
   const [isAnchoring, setIsAnchoring] = useState(false);
+  const [bootComplete, setBootComplete] = useState(false);
 
   const handleFileUpload = async (selected: File) => {
     setFile(selected);
@@ -36,10 +38,12 @@ export default function Home() {
     }
   };
 
+  if (!bootComplete) return <BootIntro onFinish={() => setBootComplete(true)} />;
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center text-green-400 font-mono">
       <MatrixRain isAnchoring={isAnchoring} />
-      <div className="z-10 text-center">
+      <div className="z-10 text-center animate-fadeIn">
         <h1 className="text-3xl md:text-4xl font-bold mb-6 drop-shadow-[0_0_5px_#00ff88]">
           Verify documents securely on the blockchain
         </h1>

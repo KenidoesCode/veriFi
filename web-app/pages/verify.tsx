@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { verifyProof } from "../lib/anchor";
 import MatrixRain from "../components/MatrixRain";
+import BootIntro from "../components/BootIntro";
 
 export default function Verify() {
   const [proof, setProof] = useState("");
   const [status, setStatus] = useState("Awaiting verification...");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [bootComplete, setBootComplete] = useState(false);
 
   const handleVerify = async () => {
     if (!proof.trim()) return alert("Enter a proof hash first.");
@@ -28,10 +30,12 @@ export default function Verify() {
     }
   };
 
+  if (!bootComplete) return <BootIntro onFinish={() => setBootComplete(true)} />;
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center text-green-400 font-mono">
       <MatrixRain isAnchoring={isVerifying} />
-      <div className="z-10 text-center">
+      <div className="z-10 text-center animate-fadeIn">
         <h1 className="text-3xl md:text-4xl font-bold mb-6 drop-shadow-[0_0_5px_#00ff88]">
           Verify Document
         </h1>
