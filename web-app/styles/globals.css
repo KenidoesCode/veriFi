@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #000000 0%, #020617 50%, #0f172a 100%);
+  color: #00ff99;
+  font-family: "Courier New", monospace;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(0, 255, 136, 0.3);
+  color: #fff;
+}
+
+button, label {
+  cursor: pointer;
+}
+
+code {
+  background: rgba(0, 0, 0, 0.6);
+  color: #00ff88;
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+
+.common-btn {
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  color: #39ff14;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+}
+
+.common-btn:hover {
+  background-color: rgba(0, 255, 0, 0.2);
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.6);
+}

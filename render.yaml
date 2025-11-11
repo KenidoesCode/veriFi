@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: verifi-backend
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: cd verifi-backend && npm install
+    startCommand: cd verifi-backend && node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: RPC_URL
+        value: https://polygon-amoy.g.alchemy.com/v2/YOUR_ALCHEMY_KEY
+      - key: PRIVATE_KEY
+        value: YOUR_WALLET_PRIVATE_KEY
+      - key: CONTRACT_ADDRESS
+        value: 0x8DAA5744a571BBc1067C8A3ae8B901FD4999b464
+
+  - type: web
+    name: verifi-frontend
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: cd web-app && npm install && npm run build
+    startCommand: cd web-app && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService:
+          name: verifi-backend
+          type: web
+          property: url

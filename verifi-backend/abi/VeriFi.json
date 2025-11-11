@@ -1,0 +1,91 @@
+{
+  "address": "0x8DAA5744a571BBc1067C8A3ae8B901FD4999b464",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "proofKey",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "author",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "ProofAnchored",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "proof",
+          "type": "string"
+        }
+      ],
+      "name": "anchor",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "anchors",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "author",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "proof",
+          "type": "string"
+        }
+      ],
+      "name": "getAnchor",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "author",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
