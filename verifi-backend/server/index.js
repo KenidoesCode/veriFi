@@ -2,22 +2,24 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+// ==================== Setup ====================
 dotenv.config();
-
-// ==================== JSON Import Fix (for Node 22) ====================
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const VeriFiABI = await import(path.join(__dirname, "../abi/VeriFi.json"), {
-  with: { type: "json" },
-}).then((m) => m.default);
-
-// ==================== Express & CORS Setup ====================
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// ✅ Fix for __dirname in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ Load ABI
+const abiPath = path.join(__dirname, "../abi/VeriFi.json");
+const VeriFiABI = JSON.parse(fs.readFileSync(abiPath, "utf-8"));
+
+// ✅ CORS Configuration
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -29,7 +31,7 @@ app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        console.log(`✅ CORS allowed for: ${origin || "Server"}`);
+        console.log(`✅ CORS allowed for: ${origin || "server"}`);
         callback(null, true);
       } else {
         console.warn(`❌ Blocked by CORS: ${origin}`);
@@ -38,32 +40,25 @@ app.use(
     },
   })
 );
-
 app.use(express.json());
 
 // ==================== Blockchain Setup ====================
-const RPC_URL = process.env.RPC_URL;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
-
+const { RPC_URL, PRIVATE_KEY, CONTRACT_ADDRESS } = process.env;
 if (!RPC_URL || !PRIVATE_KEY || !CONTRACT_ADDRESS) {
-  console.error("❌ Missing environment variables in .env file!");
+  console.error("❌ Missing environment variables in .env!");
   process.exit(1);
 }
 
 console.log("✅ Connecting to blockchain...");
 
-// ✅ FIX for Ethers v6 — Proper Provider Initialization
-const provider = new ethers.JsonRpcProvider
-  ? new ethers.JsonRpcProvider(RPC_URL)
-  : new ethers.providers.JsonRpcProvider(RPC_URL); // fallback (dual support)
-
+// ✅ Correct Ethers v6 provider and wallet
+const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, VeriFiABI.abi, wallet);
 
 // ==================== Routes ====================
 
-// 🪶 Anchor Document
+// 🪶 Anchor Proof
 app.get("/anchor", async (req, res) => {
   try {
     const proof = req.query.proof;
@@ -81,7 +76,7 @@ app.get("/anchor", async (req, res) => {
   }
 });
 
-// 🔍 Verify Document
+// 🔍 Verify Proof
 app.get("/verify", async (req, res) => {
   try {
     const proof = req.query.proof;
